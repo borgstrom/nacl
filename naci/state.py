@@ -5,6 +5,9 @@ class StateRegistry(object):
     """
 
     def __init__(self):
+        self.empty()
+
+    def empty(self):
         self.states = {}
 
     def add(self, name, state):
@@ -46,6 +49,13 @@ class StateFactory(object):
             **k
         )
 
+    def __call__(self, name):
+        """
+        When an object is called it is being used as a requisite
+        """
+        # return the correct data structure for the requisite
+        return {self.module: name}
+
 
 class State(object):
     """
@@ -72,9 +82,17 @@ class State(object):
             for k in sorted(kwargs.iterkeys())
         ]
 
+        # handle some "special" cases
+
+        # our requisites should all be lists, but when you only have a single
+        # one it's more convenient to provide it without wrapping it in a list.
+        # if that's the case wrap it in a list
+        for attr in ('require', 'watch', 'require_in', 'watch_in'):
+            if attr in self.attrs and not isinstance(self.attrs[attr], list):
+                self.attrs[attr] = [self.attrs[attr]]
+
         if registry is None:
             registry = default_registry
-
         registry.add(name, self)
 
     def __str__(self):
