@@ -25,9 +25,7 @@ class StateTests(TestCase):
 
     def test_factory_serialization(self):
         File = StateFactory('file')
-        File.managed('/usr/local/bin/pydmesg',
-                     user='root', group='root', mode='0755',
-                     source='salt://debian/files/pydmesg.py')
+        File.managed('/usr/local/bin/pydmesg', **pydmesg_kwargs)
 
         self.assertEqual(
             default_registry.states['/usr/local/bin/pydmesg'].serialize(),
