@@ -1,3 +1,5 @@
+REQUISITES = ('require', 'watch', 'use', 'require_in', 'watch_in', 'use_in')
+
 
 class StateRegistry(object):
     """
@@ -17,6 +19,15 @@ class StateRegistry(object):
         self.states[name] = state
 
 default_registry = StateRegistry()
+
+
+class StateRequisite(object):
+    def __init__(self, module, name):
+        self.module = module
+        self.name = name
+
+    def __call__(self):
+        return {self.module: self.name}
 
 
 class StateFactory(object):
@@ -54,7 +65,7 @@ class StateFactory(object):
         When an object is called it is being used as a requisite
         """
         # return the correct data structure for the requisite
-        return {self.module: name}
+        return StateRequisite(self.module, name)
 
 
 class State(object):
@@ -73,23 +84,28 @@ class State(object):
         self.name = name
         self.func = func
 
-        # store our raw kwargs, but also store a copy in the format the salt
-        # state needs to be built in. we sort the kwargs by key so that we
+        # handle our requisites
+        for attr in REQUISITES:
+            if attr in kwargs:
+                # our requisites should all be lists, but when you only have a
+                # single item it's more convenient to provide it without
+                # wrapping it in a list. transform them into a list
+                if not isinstance(kwargs[attr], list):
+                    kwargs[attr] = [kwargs[attr]]
+
+                # rebuild the requisite list transforming any of the actual
+                # StateRequisite objects into their representative dict
+                kwargs[attr] = [
+                    req() if isinstance(req, StateRequisite) else req
+                    for req in kwargs[attr]
+                ]
+
+        # build our attrs from kwargs. we sort the kwargs by key so that we
         # have consistent ordering for tests
-        self.kwargs = kwargs
         self.attrs = [
             {k: kwargs[k]}
             for k in sorted(kwargs.iterkeys())
         ]
-
-        # handle some "special" cases
-
-        # our requisites should all be lists, but when you only have a single
-        # one it's more convenient to provide it without wrapping it in a list.
-        # if that's the case wrap it in a list
-        for attr in ('require', 'watch', 'require_in', 'watch_in'):
-            if attr in self.attrs and not isinstance(self.attrs[attr], list):
-                self.attrs[attr] = [self.attrs[attr]]
 
         if registry is None:
             registry = default_registry
@@ -98,5 +114,5 @@ class State(object):
     def __str__(self):
         return "%s = %s:%s" % (self.name, self.func, self.attrs)
 
-    def serialize(self):
+    def __call__(self):
         return (self.name, {self.func: self.attrs})
