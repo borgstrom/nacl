@@ -1,0 +1,26 @@
+# vagrant
+.vagrant/
+
+# pycharm
+.idea/
+
+# vim swap files
+.*.sw*
+
+# compiled python files
+*.pyc
+
+# os x cruft
+.DS_Store
+
+# RVM/Gemfile Stuff
+.ruby-version
+.ruby-gemset
+
+# python dist files
+dist/*
+build/*
+*.egg-info/
+
+# coverage files
+.coverage
