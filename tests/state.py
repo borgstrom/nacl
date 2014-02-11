@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+from salt.utils.odict import OrderedDict
+
 from naci.state import StateFactory, State, default_registry
 
 File = StateFactory('file')
@@ -13,6 +15,7 @@ pydmesg_expected = ('/usr/local/bin/pydmesg', {
         {'user': 'root'},
     ]
 })
+pydmesg_salt_expected = OrderedDict([('/usr/local/bin/pydmesg', pydmesg_expected)])
 pydmesg_kwargs = dict(user='root', group='root', mode='0755',
                       source='salt://debian/files/pydmesg.py')
 
@@ -62,3 +65,23 @@ class StateTests(TestCase):
                         ]
                     })
                 )
+
+    def test_salt_run(self):
+        File.managed('/usr/local/bin/pydmesg',
+                     require=File('/usr/local/bin'),
+                     **pydmesg_kwargs)
+
+        self.assertEqual(
+            default_registry.states['/usr/local/bin/pydmesg'](),
+            pydmesg_expected
+        )
+
+        self.assertEqual(
+            default_registry.salt_run(),
+            pydmesg_salt_expected
+        )
+
+        self.assertEqual(
+            default_registry.states,
+            OrderedDict()
+        )

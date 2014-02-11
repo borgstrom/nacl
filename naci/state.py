@@ -1,4 +1,15 @@
+from salt.utils.odict import OrderedDict
+
+
 REQUISITES = ('require', 'watch', 'use', 'require_in', 'watch_in', 'use_in')
+
+
+class StateException(Exception):
+    pass
+
+
+class DuplicateState(StateException):
+    pass
 
 
 class StateRegistry(object):
@@ -9,12 +20,22 @@ class StateRegistry(object):
         self.empty()
 
     def empty(self):
-        self.states = {}
+        self.states = OrderedDict()
         self.requisites = []
+
+    def salt_run(self):
+        states = OrderedDict([
+            (name, state())
+            for name, state in self.states.iteritems()
+        ])
+
+        self.empty()
+
+        return states
 
     def add(self, name, state):
         if name in self.states:
-            raise Exception("TODO: Make this better")
+            raise DuplicateState("A state named '%s' already exists" % name)
 
         # if we have requisites in our stack then add them to the state
         if len(self.requisites) > 0:
