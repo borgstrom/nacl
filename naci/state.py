@@ -5,29 +5,54 @@ class StateRegistry(object):
     """
     The StateRegistry holds all of the states that have been created.
     """
-
     def __init__(self):
         self.empty()
 
     def empty(self):
         self.states = {}
+        self.requisites = []
 
     def add(self, name, state):
         if name in self.states:
             raise Exception("TODO: Make this better")
 
+        # if we have requisites in our stack then add them to the state
+        if len(self.requisites) > 0:
+            for req in self.requisites:
+                if req.requisite not in state.kwargs:
+                    state.kwargs[req.requisite] = []
+                state.kwargs[req.requisite].append(req())
+
         self.states[name] = state
+
+    def push_requisite(self, requisite):
+        self.requisites.append(requisite)
+
+    def pop_requisite(self):
+        del self.requisites[-1]
 
 default_registry = StateRegistry()
 
 
 class StateRequisite(object):
-    def __init__(self, module, name):
+    def __init__(self, requisite, module, name, registry=None):
+        self.requisite = requisite
         self.module = module
         self.name = name
 
+        if registry is None:
+            self.registry = default_registry
+        else:
+            self.registry = registry
+
     def __call__(self):
         return {self.module: self.name}
+
+    def __enter__(self):
+        self.registry.push_requisite(self)
+
+    def __exit__(self, type, value, traceback):
+        self.registry.pop_requisite()
 
 
 class StateFactory(object):
@@ -53,19 +78,23 @@ class StateFactory(object):
             self.registry = default_registry
 
     def __getattr__(self, func):
-        return lambda name, **k: State(
-            name,
-            ".".join([self.module, func]),
-            registry=self.registry,
-            **k
-        )
+        def make_state(name, **kwargs):
+            return State(
+                name,
+                self.module,
+                func,
+                registry=self.registry,
+                **kwargs
+            )
+        return make_state
 
-    def __call__(self, name):
+    def __call__(self, name, requisite='require'):
         """
         When an object is called it is being used as a requisite
         """
         # return the correct data structure for the requisite
-        return StateRequisite(self.module, name)
+        return StateRequisite(requisite, self.module, name,
+                              registry=self.registry)
 
 
 class State(object):
@@ -80,9 +109,24 @@ class State(object):
     use the default registry if not specified.
     """
 
-    def __init__(self, name, func, registry=None, **kwargs):
+    def __init__(self, name, module, func, registry=None, **kwargs):
         self.name = name
+        self.module = module
         self.func = func
+        self.kwargs = kwargs
+
+        self.requisite = StateRequisite('require', self.module, self.name,
+                                        registry=registry)
+
+        if registry is None:
+            self.registry = default_registry
+        else:
+            self.registry = registry
+        self.registry.add(name, self)
+
+    @property
+    def attrs(self):
+        kwargs = self.kwargs
 
         # handle our requisites
         for attr in REQUISITES:
@@ -102,17 +146,25 @@ class State(object):
 
         # build our attrs from kwargs. we sort the kwargs by key so that we
         # have consistent ordering for tests
-        self.attrs = [
+        return [
             {k: kwargs[k]}
             for k in sorted(kwargs.iterkeys())
         ]
 
-        if registry is None:
-            registry = default_registry
-        registry.add(name, self)
+    @property
+    def full_func(self):
+        return "%s.%s" % (self.module, self.func)
 
     def __str__(self):
-        return "%s = %s:%s" % (self.name, self.func, self.attrs)
+        return "%s = %s:%s" % (self.name, self.full_func, self.attrs)
 
     def __call__(self):
-        return (self.name, {self.func: self.attrs})
+        return (self.name, {
+            self.full_func: self.attrs
+        })
+
+    def __enter__(self):
+        self.registry.push_requisite(self.requisite)
+
+    def __exit__(self, type, value, traceback):
+        self.registry.pop_requisite()
