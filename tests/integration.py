@@ -8,6 +8,8 @@ from salttesting.helpers import ensure_in_syspath
 
 ensure_in_syspath('../')
 
+from naci.state import default_registry
+
 
 def tmpl(name):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", name)
@@ -26,3 +28,5 @@ class NaCITests(TestCase):
                 ]
             })),
         ]))
+
+        self.assertEqual(default_registry.states, OrderedDict())
