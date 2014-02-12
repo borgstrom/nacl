@@ -8,7 +8,7 @@ from salttesting.helpers import ensure_in_syspath
 
 ensure_in_syspath('../')
 
-from naci.state import default_registry
+from naci.state import default_registry, InvalidFunction
 
 
 def tmpl(name):
@@ -30,3 +30,8 @@ class NaCITests(TestCase):
         ]))
 
         self.assertEqual(default_registry.states, OrderedDict())
+
+    def test_invalid_function(self):
+        def _test():
+            py(tmpl('invalid_function.py'), string=True)
+        self.assertRaises(InvalidFunction, _test)

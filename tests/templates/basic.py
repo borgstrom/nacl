@@ -1,3 +1,5 @@
+#!py
+
 from naci import run
 from naci.auto import *
 

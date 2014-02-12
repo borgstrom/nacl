@@ -12,6 +12,10 @@ class DuplicateState(StateException):
     pass
 
 
+class InvalidFunction(StateException):
+    pass
+
+
 class StateRegistry(object):
     """
     The StateRegistry holds all of the states that have been created.
@@ -91,14 +95,19 @@ class StateFactory(object):
 
     The kwargs are passed through to the State object
     """
-    def __init__(self, module, registry=None):
+    def __init__(self, module, registry=None, valid_funcs=[]):
         self.module = module
+        self.valid_funcs = valid_funcs
         if registry is not None:
             self.registry = registry
         else:
             self.registry = default_registry
 
     def __getattr__(self, func):
+        if len(self.valid_funcs) > 0 and func not in self.valid_funcs:
+            raise InvalidFunction("The function '%s' does not exist in the "
+                                  "StateFactory for '%s'" % (func, self.module))
+
         def make_state(name, **kwargs):
             return State(
                 name,
