@@ -1,1 +1,2 @@
-from .run import run
+__version__ = '0.0.1'
+__url__ = 'https://github.com/borgsrom/naci'
