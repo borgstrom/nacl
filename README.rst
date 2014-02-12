@@ -11,8 +11,8 @@ Project Motivation
 The default YAML renderer that SaltStack_ uses is the best starting point for
 building state data. It's easy to write & grok syntax make it ideal for getting
 your feet wet. As a state tree grows the combination of Jinja_ with YAML mean
-that you get to add some programatic generation of your state tree to reduce
-repetative tasks through the use macros and other built in Jinja_ goodness.
+that you get to add some programmatic generation of your state tree to reduce
+repetitive tasks through the use macros and other built in Jinja_ goodness.
 
 Then your state tree starts to get bigger, and bigger, and bigger. Soon you end
 up with hundreds of YAML files, some of which a hundreds if not thousands of
@@ -46,7 +46,7 @@ Great. Now how do we use NaCI?
 
 As mentioned it is not a SaltStack_ renderer, which means that it is not
 included by default when you install Salt (maybe some day). Instead NaCI is
-a full standalone Python package available on the cheeseshop (PyPI). This
+a full standalone Python package available on the cheese shop (PyPI). This
 means that to install it you can simply install it globally using
 ``easy_install``::
 
@@ -79,7 +79,7 @@ State Factories
 Use the ``naci.auto`` module provides you a convenient way to get access to
 all of the available SaltStack_ states. You can also generate these interfaces
 directly yourself if you don't want to incur the overhead of auto-discovering
-the states::
+the available states::
 
     #!py
     from naci.run import run
@@ -93,7 +93,6 @@ the states::
 
 Context Managers and requisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 How about something a little more complex. Here we're going to get into the
 core of what makes NaCI the best way to write states::
 
@@ -103,8 +102,8 @@ core of what makes NaCI the best way to write states::
 
     nginx = Pkg.installed("nginx")
     with nginx:
-        svc = Service.running("nginx", enable=True)
-        with svc:
+        Service.running("nginx", enable=True)
+        with Service("nginx", "watch_in"):
             File.managed("/etc/nginx/conf.d/mysite.conf",
                          owner='root', group='root', mode='0444',
                          source='salt://nginx/mysite.conf')
@@ -113,7 +112,7 @@ core of what makes NaCI the best way to write states::
 The objects that are returned from each of the magic method calls are setup to
 be used a Python context managers (``with``) and when you use them as such all
 declarations made within the scope will **automatically** use the enclosing
-state as a requisite!
+state as a requisite! (See below for more info on direct requisite usage).
 
 The above could have also been written use direct requisite statements as::
 
@@ -126,7 +125,7 @@ The above could have also been written use direct requisite statements as::
     File.managed("/etc/nginx/conf.d/mysite.conf",
                  owner='root', group='root', mode='0444',
                  source='salt://nginx/mysite.conf',
-                 require=Service("nginx"))
+                 watch_in=Service("nginx"))
 
 You can use the direct requisite statement for referencing states that are
 generated outside of the current file::
