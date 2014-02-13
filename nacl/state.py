@@ -189,9 +189,9 @@ class State(object):
         return "%s = %s:%s" % (self.name, self.full_func, self.attrs)
 
     def __call__(self):
-        return (self.name, {
+        return {
             self.full_func: self.attrs
-        })
+        }
 
     def __enter__(self):
         self.registry.push_requisite(self.requisite)
