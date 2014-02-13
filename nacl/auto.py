@@ -5,7 +5,7 @@ SMinion class reports as being available
 TODO: This needs more testing and maybe a rewrite
 """
 
-from naci.state import StateFactory
+from nacl.state import StateFactory
 
 from salt.config import minion_config
 from salt.loader import states

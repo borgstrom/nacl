@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from salt.utils.odict import OrderedDict
 
-from naci.state import StateFactory, State, default_registry
+from nacl.state import StateFactory, State, default_registry
 
 File = StateFactory('file')
 

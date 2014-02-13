@@ -8,15 +8,15 @@ from salttesting.helpers import ensure_in_syspath
 
 ensure_in_syspath('../')
 
-from naci.state import default_registry, InvalidFunction
+from nacl.state import default_registry, InvalidFunction
 
 
 def tmpl(name):
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", name)
 
 
-class NaCITests(TestCase):
-    def test_naci_run(self):
+class NaClTests(TestCase):
+    def test_nacl_run(self):
         ret = py(tmpl('basic.py'), string=True)
         self.assertEqual(ret['result'], True)
         self.assertEqual(ret['data'], OrderedDict([
