@@ -1,5 +1,7 @@
 NaCl
 ====
+**We're definitely talking about Salt**
+
 NaCl is an alternative interface for building complex SaltStack_ states using
 pure Python instead of the default YAML renderer. It is **not** a renderer, but
 rather a standard Python package that you use in conjunction with the standard
@@ -157,4 +159,4 @@ TODO
   the system path themselves.
 
 .. _SaltStack: http://saltstack.org/
-.. _Jinja: http://jinja.poco.org/
+.. _Jinja: http://jinja.pocoo.org/

@@ -6,7 +6,7 @@ from nacl.state import StateFactory, State, default_registry
 
 File = StateFactory('file')
 
-pydmesg_expected = ('/usr/local/bin/pydmesg', {
+pydmesg_expected = {
     'file.managed': [
         {'group': 'root'},
         {'mode': '0755'},
@@ -14,7 +14,7 @@ pydmesg_expected = ('/usr/local/bin/pydmesg', {
         {'source': 'salt://debian/files/pydmesg.py'},
         {'user': 'root'},
     ]
-})
+}
 pydmesg_salt_expected = OrderedDict([('/usr/local/bin/pydmesg', pydmesg_expected)])
 pydmesg_kwargs = dict(user='root', group='root', mode='0755',
                       source='salt://debian/files/pydmesg.py')
@@ -55,7 +55,7 @@ class StateTests(TestCase):
 
                 self.assertEqual(
                     default_registry.states['/tmp/something'](),
-                    ('/tmp/something', {
+                    {
                         'file.managed': [
                             {'owner': 'root'},
                             {'require': [
@@ -63,7 +63,7 @@ class StateTests(TestCase):
                                 {'file': '/usr/local/bin/pydmesg'}
                             ]},
                         ]
-                    })
+                    }
                 )
 
     def test_salt_run(self):

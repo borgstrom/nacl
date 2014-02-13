@@ -20,13 +20,13 @@ class NaClTests(TestCase):
         ret = py(tmpl('basic.py'), string=True)
         self.assertEqual(ret['result'], True)
         self.assertEqual(ret['data'], OrderedDict([
-            ('/tmp', ('/tmp', {
+            ('/tmp', {
                 'file.managed': [
                     {'group': 'root'},
                     {'mode': '1777'},
                     {'owner': 'root'}
                 ]
-            })),
+            }),
         ]))
 
         self.assertEqual(default_registry.states, OrderedDict())

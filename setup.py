@@ -26,10 +26,10 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        #'License :: OSI Approved :: TODO',
+        'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires=['salt']
+    install_requires=['salt', 'salttesting']
 )
