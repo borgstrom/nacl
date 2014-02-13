@@ -31,5 +31,5 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires=['salt']
+    install_requires=['salt', 'salttesting']
 )
