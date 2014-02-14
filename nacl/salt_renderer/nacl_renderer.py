@@ -14,7 +14,8 @@ log = logging.getLogger(__virtualname__)
 def __virtual__():
     if HAS_NACL:
         log.info("NaCl renderer available")
-    return HAS_NACL
+        return __virtualname__
+    return False
 
 
 def render(template, saltenv='base', sls='',
