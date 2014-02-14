@@ -66,7 +66,7 @@ class StateTests(TestCase):
                     }
                 )
 
-    def test_salt_run(self):
+    def test_salt_data(self):
         File.managed('/usr/local/bin/pydmesg',
                      require=File('/usr/local/bin'),
                      **pydmesg_kwargs)
@@ -77,7 +77,7 @@ class StateTests(TestCase):
         )
 
         self.assertEqual(
-            default_registry.salt_run(),
+            default_registry.salt_data(),
             pydmesg_salt_expected
         )
 

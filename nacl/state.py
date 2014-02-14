@@ -27,7 +27,7 @@ class StateRegistry(object):
         self.states = OrderedDict()
         self.requisites = []
 
-    def salt_run(self):
+    def salt_data(self):
         states = OrderedDict([
             (name, state())
             for name, state in self.states.iteritems()
