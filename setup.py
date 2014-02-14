@@ -30,6 +30,5 @@ setup(
         'Natural Language :: English',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
-    ],
-    install_requires=['salt', 'salttesting']
+    ]
 )
