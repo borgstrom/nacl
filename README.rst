@@ -48,11 +48,9 @@ Great. Now how do we use NaCl?
 
 As mentioned it is not a SaltStack_ renderer, which means that it is not
 included by default when you install Salt (maybe some day). Instead NaCl is
-a full standalone Python package available on the cheese shop (PyPI). This
-means that to install it you can simply install it globally using
-``easy_install``::
-
-    sudo easy_install nacl
+a full standalone Python package. To install it you will need to clone the
+git repository and then install it globally using ``sudo python setup.py
+install``.
 
 NaCl needs to be installed globally so that salt can find it when your state
 files are being rendered.
@@ -153,10 +151,7 @@ watch_in, use & use_in) when using the requisite as a context manager::
 TODO
 ----
 
-* Get the package up on PyPI
-* Allow for better imports so that authors building state data can ship
-  reusable code in the form of their own modules without needed to muck with
-  the system path themselves.
+* Merge into Salt
 
 .. _SaltStack: http://saltstack.org/
 .. _Jinja: http://jinja.pocoo.org/
