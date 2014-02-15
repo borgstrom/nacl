@@ -3,16 +3,16 @@ NaCl
 **We're definitely talking about Salt**
 
 NaCl is an alternative interface for building complex SaltStack_ states using
-pure Python instead of the default YAML renderer. It is **not** a renderer, but
-rather a standard Python package that you use in conjunction with the standard
-``#!py`` renderer that's built into SaltStack_.
+pure Python instead of the default YAML renderer. The implementation does
+nothing more than provide your state files with access to a number of objects
+that provide a very nice & clean interface for generating the complex state
+data.
 
-
-Project Motivation
-------------------
+Background
+----------
 The default YAML renderer that SaltStack_ uses is the best starting point for
-building state data. It's easy to write & grok syntax make it ideal for getting
-your feet wet. As a state tree grows the combination of Jinja_ with YAML mean
+building state data. It's easy to understand syntax makes it ideal for getting
+your feet wet. As a state tree grows the combination of Jinja_ with YAML means
 that you get to add some programmatic generation of your state tree to reduce
 repetitive tasks through the use macros and other built in Jinja_ goodness.
 
@@ -22,87 +22,65 @@ lines big. Soon you have giant, very complex macros, state & pillar data that
 becomes harder to grok and even harder to bring new team members up to speed
 on.
 
-As a Python hacker my initial reaction to my growing state tree was simply to
-reach for the built-in ``#!py`` renderer. While you do gain the power of Python
-it also comes with a huge amount of responsibility in terms of getting Salt's,
-quite complex, data structure right. I also didn't like that I had to define a
-``run()`` function in each file I built. It felt very un-pragmatic to me, but
-I do understand the architectural reasons for doing it this way.
+NaCl aims to allow your complex states to be expressed in an entirely
+programatic way that still maintains the feeling of simplicity that the YAML
+interface provides.
 
-So I set about to create a more convenient way to write state data using pure
-Python...
+Installation
+------------
+1. Clone this repository on to each minion (yes, I know. this is a pain that
+   I hope to have resolved shortly)::
 
+    git clone https://github.com/borgstrom/nacl.git
 
-What about pydsl?
-^^^^^^^^^^^^^^^^^
-It's true, SaltStack_ ships with a renderer named ``#!pydsl`` built in. But,
-it's the personal preference of the author of NaCl that DSL's are things that
-are rarely the right solution to a problem and that the ``#!pydsl`` renderer
-specifically is actually more cumbersome to write state data in. I tried it,
-and I didn't like it (at all, sorry pydsl author...)
+2. Install nacl as root on each minion::
 
+    cd nacl
+    sudo python setup.py install
+
+3. On the master prepare the renderer for distribution::
+
+    mkdir /srv/salt/_renderers
+    curl -o /srv/salt/_renderers/nacl_renderer.py https://raw2.github.com/borgstrom/nacl/master/salt_renderer/nacl_renderer.py
+
+   This assumes that your salt file roots contain the default location of
+   ``/srv/salt``, adjust the paths if you're using a different location. The
+   salt master will now distribute the renderer to each minion.
 
 Usage
 -----
-Great. Now how do we use NaCl?
+Let's take a look at how you use NaCl in a state file. Here's a quick example
+that ensures the ``/tmp`` directory is in the correct state::
 
-As mentioned it is not a SaltStack_ renderer, which means that it is not
-included by default when you install Salt (maybe some day). Instead NaCl is
-a full standalone Python package. To install it you will need to clone the
-git repository and then install it globally using ``sudo python setup.py
-install``.
-
-NaCl needs to be installed globally so that salt can find it when your state
-files are being rendered.
-
-Now, let's take a look at how you use NaCl in a state file. Here's a quick
-example that ensures the ``/tmp`` directory is in the correct state::
-
-    #!py
-    from nacl.run import run
-    from nacl.auto import *
+    #!nacl
 
     File.managed("/tmp", user='root', group='root', mode='1777')
 
 Nice and Pythonic!
 
-Here NaCl provides a ``run`` function that you simply import and it will
-handle all of the integration with Salt. Next we import everything from the
-``nacl.auto`` module. This module takes care of creating an object for each
-of the available states on the minion. Each state is represented by an object
-that is the capitalized version of it's name (ie. ``File``, ``Service``,
-``User``, etc), and these objects have a magic method that exposes all of the
-available state functions (ie. ``File.managed``).
+By using the "shebang" syntax to switch to the NaCl renderer we can now write
+our state data using an object based interface that should feel at home to
+python developers. You can import any module and do anything that you'd like
+(with caution, importing sqlalchemy, django or other large frameworks has not
+been tested yet). Using the NaCl renderer is exactly the same as using the
+built-in Python renderer with the exception that the NaCl renderer takes care
+of creating an object for each of the available states on the minion. Each
+state is represented by an object that is the capitalized version of it's name
+(ie. ``File``, ``Service``, ``User``, etc), and these objects expose all of
+their available state functions (ie. ``File.managed``,  ``Service.running``,
+etc).
 
-State Factories
-^^^^^^^^^^^^^^^
-Use the ``nacl.auto`` module provides you a convenient way to get access to
-all of the available SaltStack_ states. You can also generate these interfaces
-directly yourself if you don't want to incur the overhead of auto-discovering
-the available states::
-
-    #!py
-    from nacl.run import run
-    from nacl.state import StateFactory
-
-    File = StateFactory("file")
-    Pkg = StateFactory("pkg")
-    Service = StateFactory("service")
-
-    ...
 
 Context Managers and requisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 How about something a little more complex. Here we're going to get into the
 core of what makes NaCl the best way to write states::
 
-    #!py
-    from nacl.run import run
-    from nacl.auto import *
+    #!nacl
 
-    nginx = Pkg.installed("nginx")
-    with nginx:
+    with Pkg.installed("nginx"):
         Service.running("nginx", enable=True)
+
         with Service("nginx", "watch_in"):
             File.managed("/etc/nginx/conf.d/mysite.conf",
                          owner='root', group='root', mode='0444',
@@ -112,13 +90,11 @@ core of what makes NaCl the best way to write states::
 The objects that are returned from each of the magic method calls are setup to
 be used a Python context managers (``with``) and when you use them as such all
 declarations made within the scope will **automatically** use the enclosing
-state as a requisite! (See below for more info on direct requisite usage).
+state as a requisite!
 
 The above could have also been written use direct requisite statements as::
 
-    #!py
-    from nacl.run import run
-    from nacl.auto import *
+    #!nacl
 
     Pkg.installed("nginx")
     Service.running("nginx", enable=True, require=Pkg("nginx"))
@@ -130,9 +106,7 @@ The above could have also been written use direct requisite statements as::
 You can use the direct requisite statement for referencing states that are
 generated outside of the current file::
 
-    #!py
-    from nacl.run import run
-    from nacl.auto import *
+    #!nacl
 
     # some-other-package is defined else where
     Pkg.installed("nginx", require=Pkg("some-other-package"))
@@ -141,17 +115,20 @@ The last thing that direct requisites provide is the ability to select which
 of the SaltStack_ requisites you want to use (require, require_in, watch,
 watch_in, use & use_in) when using the requisite as a context manager::
 
-    #!py
-    from nacl.run import run
-    from nacl.auto import *
+    #!nacl
 
     with Service("my-service", "watch_in"):
         ...
 
+The above example would cause all declarations inside the scope of the context
+manager to automatically have their ``watch_in`` set to
+``Service("my-service")``.
+
 TODO
 ----
 
-* Merge into Salt
+* Try to integrate directly with Salt and create a pull request to get NaCl
+  included in the core distribution.
 
 .. _SaltStack: http://saltstack.org/
 .. _Jinja: http://jinja.pocoo.org/
