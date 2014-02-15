@@ -17,10 +17,9 @@ that you get to add some programmatic generation of your state tree to reduce
 repetitive tasks through the use macros and other built in Jinja_ goodness.
 
 Then your state tree starts to get bigger, and bigger, and bigger. Soon you end
-up with hundreds of YAML files, some of which a hundreds if not thousands of
-lines big. Soon you have giant, very complex macros, state & pillar data that
-becomes harder to grok and even harder to bring new team members up to speed
-on.
+up with hundreds of YAML files, some of which are hundreds of lines long and
+contain complex macros using custom pillar data. This combination becomes
+harder to grok and even harder to bring new team members up to speed on.
 
 NaCl aims to allow your complex states to be expressed in an entirely
 programatic way that still maintains the feeling of simplicity that the YAML
