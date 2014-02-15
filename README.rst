@@ -107,7 +107,7 @@ generated outside of the current file::
 
     #!nacl
 
-    # some-other-package is defined else where
+    # some-other-package is defined in some other state file
     Pkg.installed("nginx", require=Pkg("some-other-package"))
 
 The last thing that direct requisites provide is the ability to select which
