@@ -29,17 +29,17 @@ class StateRegistry(object):
 
     def salt_data(self):
         states = OrderedDict([
-            (name, state())
-            for name, state in self.states.iteritems()
+            (id_, state())
+            for id_, state in self.states.iteritems()
         ])
 
         self.empty()
 
         return states
 
-    def add(self, name, state):
-        if name in self.states:
-            raise DuplicateState("A state named '%s' already exists" % name)
+    def add(self, id_, state):
+        if id_ in self.states:
+            raise DuplicateState("A state with id '%s' already exists" % id_)
 
         # if we have requisites in our stack then add them to the state
         if len(self.requisites) > 0:
@@ -48,7 +48,7 @@ class StateRegistry(object):
                     state.kwargs[req.requisite] = []
                 state.kwargs[req.requisite].append(req())
 
-        self.states[name] = state
+        self.states[id_] = state
 
     def push_requisite(self, requisite):
         self.requisites.append(requisite)
@@ -60,10 +60,10 @@ default_registry = StateRegistry()
 
 
 class StateRequisite(object):
-    def __init__(self, requisite, module, name, registry=None):
+    def __init__(self, requisite, module, id_, registry=None):
         self.requisite = requisite
         self.module = module
-        self.name = name
+        self.id_ = id_
 
         if registry is None:
             self.registry = default_registry
@@ -71,7 +71,7 @@ class StateRequisite(object):
             self.registry = registry
 
     def __call__(self):
-        return {self.module: self.name}
+        return {self.module: self.id_}
 
     def __enter__(self):
         self.registry.push_requisite(self)
@@ -108,9 +108,9 @@ class StateFactory(object):
             raise InvalidFunction("The function '%s' does not exist in the "
                                   "StateFactory for '%s'" % (func, self.module))
 
-        def make_state(name, **kwargs):
+        def make_state(id_, **kwargs):
             return State(
-                name,
+                id_,
                 self.module,
                 func,
                 registry=self.registry,
@@ -118,12 +118,12 @@ class StateFactory(object):
             )
         return make_state
 
-    def __call__(self, name, requisite='require'):
+    def __call__(self, id_, requisite='require'):
         """
         When an object is called it is being used as a requisite
         """
         # return the correct data structure for the requisite
-        return StateRequisite(requisite, self.module, name,
+        return StateRequisite(requisite, self.module, id_,
                               registry=self.registry)
 
 
@@ -139,20 +139,20 @@ class State(object):
     use the default registry if not specified.
     """
 
-    def __init__(self, name, module, func, registry=None, **kwargs):
-        self.name = name
+    def __init__(self, id_, module, func, registry=None, **kwargs):
+        self.id_ = id_
         self.module = module
         self.func = func
         self.kwargs = kwargs
 
-        self.requisite = StateRequisite('require', self.module, self.name,
+        self.requisite = StateRequisite('require', self.module, self.id_,
                                         registry=registry)
 
         if registry is None:
             self.registry = default_registry
         else:
             self.registry = registry
-        self.registry.add(name, self)
+        self.registry.add(self.id_, self)
 
     @property
     def attrs(self):
@@ -186,7 +186,7 @@ class State(object):
         return "%s.%s" % (self.module, self.func)
 
     def __str__(self):
-        return "%s = %s:%s" % (self.name, self.full_func, self.attrs)
+        return "%s = %s:%s" % (self.id_, self.full_func, self.attrs)
 
     def __call__(self):
         return {
