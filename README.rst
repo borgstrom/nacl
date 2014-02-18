@@ -1,3 +1,12 @@
+This project has been merged directly into Salt
+===============================================
+I've merged this project directly into Salt: https://github.com/saltstack/salt/pull/10517
+
+No more work will be done on this repository, it will remain here for
+prosperity.
+
+----
+
 NaCl
 ====
 **We're definitely talking about Salt**
